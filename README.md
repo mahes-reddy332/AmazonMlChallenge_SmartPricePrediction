@@ -1,66 +1,273 @@
-🚀 Amazon ML Challenge 2025: The Price is Right (Smart Pricing)
-The Mission
-In the fast-paced world of e-commerce, a product's success lives or dies by its price. Our team set out to build a Multi-modal Smart Pricing Engine capable of analyzing a product's visual identity (images) and its technical specifications (text) to predict the optimal price point.
+#  Amazon ML Challenge 2025  
+## The Multi-Modal Pricing Journey  
+### From Raw Data to a Top 1% Global Rank
 
-The Result: A final score of 49.23 and a peak global rank of 240.
+This repository documents my end-to-end journey in building a high-performance multi-modal machine learning pipeline for product price prediction in the Amazon ML Challenge 2025.
 
-📖 Our Story: From Data to Deployment
-Phase 1: The Great Gathering (Data Analysis)
-We started with a massive dataset of 150,000 products. The first challenge? Noise.
+By combining computer vision, large language models, and advanced ensemble learning, this project achieved a **Top 1% global ranking** and demonstrated scalable AI system design under real-world constraints.
 
-The Discovery: Catalog descriptions were a "soup" of HTML, technical jargon, and Item Pack Quantities (IPQ).
+---
 
-The Action: We performed deep EDA and realized that price wasn't just a number; it was a relationship. A "5-pack" of batteries has a vastly different price floor than a "single" unit.
+##  Achievement Highlights
 
-The Blueprint: We decided a simple regression wouldn't cut it. We needed to "see" the product and "read" the label simultaneously.
+🏅 **Global Rank:** #819 (Top 1%)  
+📊 **Final Score (SMAPE):** 49.23  
+🎯 **Validation Accuracy:** ~80.3% (InceptionResNetV2)  
+📦 **Training Samples:** 75,000+ products  
 
-Phase 2: Turning Pixels into Features (Computer Vision)
-We knew that high-end packaging often correlates with higher prices.
+---
 
-The Workflow: We benchmarked several Vision Transformers (ViT) and CNNs.
+## 📖 The Story Behind the Model
 
-The Winner: EfficientNetB2 and InceptionResNetV2 became our workhorses.
+### Phase 1: Understanding the Problem
 
-The Artifacts: We didn't want to re-run heavy vision models during every training iteration. We performed a massive "Bake" step, extracting 150k image embeddings and saving them as .npy files for lightning-fast training later.
+The dataset consisted of product images and rich catalog descriptions.
 
-Phase 3: The Llama Breakthrough (NLP & LLMs)
-Standard TF-IDF or Word2Vec couldn't understand the "luxury" vs "budget" nuance.
+Early analysis revealed a critical insight:
 
-The Move: We pivoted to Llama-3 via AWS API.
+> Product price is influenced not only by specifications, but also by visual quality, branding, and perceived value.
 
-The "Brain": We used the LLM to process catalog_content, extracting semantic meaning and identifying key price-driving entities (Brand, Material, Unit Count).
+A purely text-based model would miss this “visual signal.”  
+A purely vision-based model would ignore structured metadata.
 
-The Storage: These textual "thoughts" were converted into high-dimensional embeddings (text_train_emb.npy), giving our model a "human-like" understanding of the product.
+So the solution had to be **multi-modal**.
 
-Phase 4: The Fusion & The Struggle (Challenges Overcome)
-This is where the real engineering happened.
+---
 
-Challenge - The Bottleneck: Processing 75k test images through an API is slow. We solved this using Google Colab's A100 GPUs and custom batching scripts to maximize throughput.
+### Phase 2: Decoding Product Descriptions (LLM-Powered NLP)
 
-Challenge - Scale: Our feature matrix grew to nearly 1GB. We implemented Standard Scaling and Dimensionality Reduction to keep the model from drowning in data.
+Traditional NLP methods failed to capture subtle semantic differences like:
 
-The Fusion: We joined our visual and textual vectors into a single "Master Feature Set" (X_train_scaled.npy).
+- “Premium” vs “Budget”  
+- “Pack of 3” vs “Single Unit”  
+- Flavor and variant descriptions  
 
-Phase 5: The Final Sprint (Modeling & Submission)
-With 24 hours left, we went into the "Eat" phase—rapidly iterating on the pre-computed features.
+#### Approach
 
-The Ensemble: We combined the strengths of Neural Networks (for complex patterns) and Gradient Boosted Trees (for structured data).
+- Deployed **Mistral-7B-v0.3** for semantic enrichment  
+- Built a hybrid feature pipeline:
+  - Regex-based extraction (weights, quantities, pack size)
+  - LLM-generated structured JSON features
+  - Transformer embeddings
 
-The Evaluation: Using SMAPE (Symmetric Mean Absolute Percentage Error), we tuned our hyperparameters until our local validation score mirrored the leaderboard.
+#### Output
 
-The Victory: We pushed our final submission.csv, landing us in the Top 1% of the competition.
 
-🛠️ Technical Arsenal
-Component	Technology
-Foundation Models	Llama 3 (Text), EfficientNet / ResNet (Vision)
-Infrastructure	AWS API, Google Colab (Pro), S3
-Core Libraries	TensorFlow, Keras, NumPy, Pandas, Scikit-learn
-Data Format	.npy (Embeddings), .csv (Metadata)
-📈 Key Lessons
-Embeddings are Gold: Pre-computing features saved us 10+ hours of training time.
 
-Multi-modal is Mandatory: Neither text nor image alone could achieve a score below 50.
+text_train_emb.npy
 
-Infrastructure Matters: AWS and Colab weren't just tools; they were the reason we finished on time.
 
-Would you like me to add a "Future Improvements" section or perhaps a more detailed table of the specific hyperparameters we used for the final model?
+A dense semantic representation of the entire product catalog.
+
+---
+
+### Phase 3: Seeing the Product (Computer Vision)
+
+Images revealed product quality, packaging, and branding cues.
+
+#### Benchmarking
+
+Tested multiple architectures:
+
+- VGG16  
+- Xception  
+- ResNet  
+- EfficientNet  
+- InceptionResNetV2  
+
+#### Best Performers
+
+| Model              | Accuracy |
+|--------------------|----------|
+| InceptionResNetV2  | 80.3%    |
+| EfficientNetB2     | 80.1%    |
+
+#### Optimization
+
+To avoid Colab RAM crashes:
+
+- Precomputed embeddings
+- Saved to disk
+
+
+img_train_emb.npy
+
+
+This enabled fast experimentation without recomputation.
+
+---
+
+### Phase 4: The Fusion Challenge
+
+Combining:
+
+- 768-dim text vectors  
+- 2048-dim image vectors  
+
+Created extremely large feature matrices.
+
+#### Key Problems
+
+❌ Memory overflow  
+❌ Sample misalignment  
+❌ Slow training  
+
+#### Solutions
+
+✅ Chunked training (15k rows per batch)  
+✅ Strict sample_id alignment  
+✅ Zero-vector padding for missing data  
+✅ Incremental scaling  
+
+Final fused representation:
+
+
+X_train_scaled.npy
+
+
+This phase transformed a fragile pipeline into a stable system.
+
+---
+
+### Phase 5: Modeling & Optimization
+
+With multi-modal features ready, focus shifted to learning algorithms.
+
+#### Ensemble Benchmarking
+
+- XGBoost (GPU)  
+- LightGBM  
+- CatBoost  
+
+#### Hyperparameter Tuning
+
+Used **Optuna** for Bayesian optimization:
+
+- Learning rate
+- Depth
+- Regularization
+- Subsampling
+
+15+ automated trials per model.
+
+#### Objective
+
+Optimized specifically for:
+
+
+SMAPE (Symmetric Mean Absolute Percentage Error)
+
+
+Final local OOF SMAPE:
+
+> 57.22%
+
+Before leaderboard submission.
+
+---
+
+##  System Architecture
+Text Data ──► LLM + Regex ──► Text Embeddings
+Image Data ─► CNN Models ───► Image Embeddings
+↓
+Feature Fusion & Scaling
+↓
+GBM Ensemble (XGB + LGBM + CB)
+↓
+Price Prediction
+
+
+
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer         | Tools & Frameworks |
+|---------------|--------------------|
+| NLP / LLM     | Mistral-7B, Transformers |
+| Vision        | InceptionResNetV2, EfficientNetB2 |
+| ML Models     | XGBoost (GPU), LightGBM, CatBoost |
+| Optimization  | Optuna |
+| Data          | NumPy, Pandas |
+| Infra         | Google Colab (A100/RTX), AWS API |
+
+---
+
+## 📂 Repository Structure
+
+
+├── FeatureExtraction.ipynb # LLM + Regex pipeline
+├── FinalMl2.ipynb # GPU XGBoost training
+├── FinalPhaseAmazonML.ipynb # Fusion + Optuna + Submission
+├── dataset/ # Raw catalog data
+├── *.npy # Precomputed embeddings
+
+
+
+
+---
+
+## 📈 Key Results
+
+✅ Integrated text, vision, and rule-based features  
+✅ Built memory-safe multi-modal pipeline  
+✅ Ranked Top 1% globally  
+✅ Achieved strong generalization  
+✅ Enabled fast experimentation  
+
+---
+
+## ⚙️ How to Run
+
+### 1. Clone Repository
+```bash
+git clone https://github.com/mahes-reddy332/Amazon-ML-Challenge-2025.git
+cd Amazon-ML-Challenge-2025
+```
+
+
+2. Install Dependencies
+```bash
+git clone https://github.com/mahes-reddy332/Amazon-ML-Challenge-2025.git
+cd Amazon-ML-Challenge-2025
+```
+3. Feature Extraction
+```bash
+jupyter notebook FeatureExtraction.ipynb
+```
+
+4. Train Models
+```bash
+jupyter notebook FinalMl2.ipynb
+```
+5. Final Fusion & Submission
+```bash
+jupyter notebook FinalPhaseAmazonML.ipynb
+```
+
+ Impact & Learnings
+
+This project strengthened my skills in:
+
+✔ Multi-modal ML system design
+✔ Large-scale feature engineering
+✔ LLM integration
+✔ GPU optimization
+✔ Memory management
+✔ Competition strategy
+
+It reflects my ability to convert raw data into production-ready AI pipelines.
+
+
+Future Work
+
+Transformer-based multi-modal fusion
+
+End-to-end deep fusion networks
+
+Automated feature selection
+
+Real-time inference pipeline
+
+Model explainability (SHAP)
