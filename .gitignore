@@ -1,0 +1,13 @@
+# Ignore large data folders
+dataset/
+MLCHALLENGE TRACES/
+
+# Ignore specific large file extensions (Crucial for your case)
+*.npy
+*.csv
+*.xls
+*.xlsx
+
+# Ignore compiled python files
+__pycache__/
+.ipynb_checkpoints/
