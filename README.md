@@ -150,6 +150,7 @@ Used **Optuna** for Bayesian optimization:
 
 15+ automated trials per model.
 
+![Uploading Screenshot 2026-02-04 024743.png…]()
 
 <img width="945" height="843" alt="Screenshot 2026-02-04 021504" src="https://github.com/user-attachments/assets/a73c5cb6-b2a1-41ed-be33-ccbfc2182444" />
 <img width="1149" height="576" alt="Screenshot 2026-02-04 021110" src="https://github.com/user-attachments/assets/8e5ee9b2-0505-4c5b-8575-79e1c8b00d1f" />
